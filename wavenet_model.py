@@ -35,7 +35,7 @@ class WaveNetModel(nn.Module):
                  classes=256,
                  output_length=32,
                  kernel_size=2,
-                 dtype=torch.FloatTensor,
+                 dtype=torch.cuda.FloatTensor,
                  bias=False):
 
         super(WaveNetModel, self).__init__()
@@ -210,7 +210,7 @@ class WaveNetModel(nn.Module):
             print("pad zero")
 
         for i in range(num_samples):
-            input = Variable(torch.FloatTensor(1, self.classes, self.receptive_field).zero_())
+            input = Variable(torch.cuda.FloatTensor(1, self.classes, self.receptive_field).zero_())
             input = input.scatter_(1, generated[-self.receptive_field:].view(1, -1, self.receptive_field), 1.)
 
             x = self.wavenet(input,
@@ -222,7 +222,7 @@ class WaveNetModel(nn.Module):
                 prob = prob.cpu()
                 np_prob = prob.data.numpy()
                 x = np.random.choice(self.classes, p=np_prob)
-                x = Variable(torch.LongTensor([x]))#np.array([x])
+                x = Variable(torch.cuda.LongTensor([x]))#np.array([x])
             else:
                 x = torch.max(x, 0)[1].float()
 
@@ -243,7 +243,7 @@ class WaveNetModel(nn.Module):
                       progress_interval=100):
         self.eval()
         if first_samples is None:
-            first_samples = torch.LongTensor(1).zero_() + (self.classes // 2)
+            first_samples = torch.cuda.LongTensor(1).zero_() + (self.classes // 2)
         first_samples = Variable(first_samples)
 
         # reset queues
@@ -253,7 +253,7 @@ class WaveNetModel(nn.Module):
         num_given_samples = first_samples.size(0)
         total_samples = num_given_samples + num_samples
 
-        input = Variable(torch.FloatTensor(1, self.classes, 1).zero_())
+        input = Variable(torch.cuda.FloatTensor(1, self.classes, 1).zero_())
         input = input.scatter_(1, first_samples[0:1].view(1, -1, 1), 1.)
 
         # fill queues with given samples
@@ -297,7 +297,7 @@ class WaveNetModel(nn.Module):
             generated = np.append(generated, o)
 
             # set new input
-            x = Variable(torch.from_numpy(x).type(torch.LongTensor))
+            x = Variable(torch.from_numpy(x).type(torch.cuda.LongTensor))
             input.zero_()
             input = input.scatter_(1, x.view(1, -1, 1), 1.).view(1, self.classes, 1)
 
@@ -320,7 +320,7 @@ class WaveNetModel(nn.Module):
         s = sum([np.prod(list(d.size())) for d in par])
         return s
 
-    def cpu(self, type=torch.FloatTensor):
+    def cpu(self, type=torch.cuda.FloatTensor):
         self.dtype = type
         for q in self.dilated_queues:
             q.dtype = self.dtype

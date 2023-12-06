@@ -40,7 +40,7 @@ def dilate(x, dilation, init_dilation=1, pad_start=True):
 
 
 class DilatedQueue:
-    def __init__(self, max_length, data=None, dilation=1, num_deq=1, num_channels=1, dtype=torch.FloatTensor):
+    def __init__(self, max_length, data=None, dilation=1, num_deq=1, num_channels=1, dtype=torch.cuda.FloatTensor):
         self.in_pos = 0
         self.out_pos = 0
         self.num_deq = num_deq
